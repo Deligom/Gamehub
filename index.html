@@ -414,7 +414,45 @@ async function doAddFriend(){const code=id('add-code').value.trim().toUpperCase(
 async function removeFriend(uid){await db.collection('users').doc(ME.uid).update({friends:firebase.firestore.FieldValue.arrayRemove(uid)});ME.friends=ME.friends.filter(f=>f!==uid);renderFriends();toast('Arkadaş çıkarıldı.');}
 
 let scanStream=null,scanAnimId=null;
-async function openScan(){id('scan-ovl').classList.add('show');try{scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const v=id('scan-video');v.srcObject=scanStream;v.play();v.onloadedmetadata=()=>{const cv=id('scan-canvas'),ctx=cv.getContext('2d');function tick(){if(!scanStream)return;cv.width=v.videoWidth;cv.height=v.videoHeight;ctx.drawImage(v,0,0);try{const img=ctx.getImageData(0,0,cv.width,cv.height),r=jsQR(img.data,img.width,img.height);if(r&&r.data.startsWith('GH-')){closeScan();id('add-code').value=r.data.toUpperCase();toast('QR okundu!');return;}}catch(e){}scanAnimId=requestAnimationFrame(tick);}scanAnimId=requestAnimationFrame(tick);};}catch(e){toast('Kamera açılamadı.');closeScan();}}
+async function openScan(){
+  id('scan-ovl').classList.add('show');
+  try{
+    scanStream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:'environment', width:{ideal:1280}, height:{ideal:720}}
+    });
+    const v=id('scan-video');
+    v.srcObject=scanStream; v.play();
+    v.onloadedmetadata=()=>{
+      const cv=id('scan-canvas'), ctx=cv.getContext('2d');
+      function tick(){
+        if(!scanStream) return;
+        const vw=v.videoWidth, vh=v.videoHeight;
+        if(!vw||!vh){scanAnimId=requestAnimationFrame(tick);return;}
+        // Crop center square (matching the scan frame)
+        const cropSize=Math.min(vw,vh)*0.7;
+        const sx=(vw-cropSize)/2, sy=(vh-cropSize)/2;
+        const scanRes=400;
+        cv.width=scanRes; cv.height=scanRes;
+        ctx.drawImage(v, sx, sy, cropSize, cropSize, 0, 0, scanRes, scanRes);
+        try{
+          const img=ctx.getImageData(0,0,scanRes,scanRes);
+          const r=jsQR(img.data,scanRes,scanRes,{inversionAttempts:'dontInvert'});
+          if(r&&r.data){
+            const val=r.data.trim().toUpperCase();
+            if(val.startsWith('GH-')){
+              closeScan();
+              id('add-code').value=val;
+              toast('QR okundu!');
+              return;
+            }
+          }
+        }catch(e){}
+        scanAnimId=requestAnimationFrame(tick);
+      }
+      scanAnimId=requestAnimationFrame(tick);
+    };
+  }catch(e){toast('Kamera açılamadı: '+e.message);closeScan();}
+}
 function closeScan(){id('scan-ovl').classList.remove('show');if(scanAnimId){cancelAnimationFrame(scanAnimId);scanAnimId=null;}if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}}
 
 // ── WHEEL ──
