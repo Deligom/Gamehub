@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>GameHub Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+
+<!-- ╔════════════════════════════════════════════════════╗
+     ║  Firebase Config  —  kendi değerlerini buraya gir ║
+     ╚════════════════════════════════════════════════════╝ -->
+<script>
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyDfF-Mk3liywCLLohd7BfxWLXDfe23bJtc",
+  authDomain:        "gamehub-9aad7.firebaseapp.com",
+  projectId:         "gamehub-9aad7",
+  storageBucket:     "gamehub-9aad7.firebasestorage.app",
+  messagingSenderId: "696610750512",
+  appId:             "1:696610750512:web:818410d9645b8b71e42df5",
+  measurementId:     "G-FR759DDXYN"
+};
+</script>
+
+<style>
+:root{
+  --bg:#07080f;--s:rgba(255,255,255,.04);--s2:rgba(255,255,255,.08);
+  --b:rgba(255,255,255,.08);--b2:rgba(255,255,255,.15);
+  --red:#e11d48;--rg:rgba(225,29,72,.2);
+  --gold:#f59e0b;--gold2:#d97706;--gg:rgba(245,158,11,.2);
+  --t:#f1f5f9;--t2:#94a3b8;--t3:#475569;
+  --acc:#6366f1;--acc2:#4f46e5;--acg:rgba(99,102,241,.25);
+  --r:14px;--r2:20px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);-webkit-tap-highlight-color:transparent;user-select:none}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 10% 10%,rgba(99,102,241,.08) 0%,transparent 65%),
+             radial-gradient(ellipse 45% 45% at 90% 90%,rgba(225,29,72,.06) 0%,transparent 60%),
+             radial-gradient(ellipse 40% 40% at 50% 100%,rgba(245,158,11,.04) 0%,transparent 55%)}
+
+.screen{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .25s;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.screen.active{opacity:1;pointer-events:all}
+.screen::-webkit-scrollbar{width:3px}
+.screen::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+@media(min-width:480px){.screen{max-width:480px;left:50%;transform:translateX(-50%);border-left:1px solid rgba(255,255,255,.04);border-right:1px solid rgba(255,255,255,.04)}}
+
+.hdr{display:flex;align-items:center;gap:10px;padding:14px 18px;padding-top:max(14px,env(safe-area-inset-top));border-bottom:1px solid var(--b);background:rgba(7,8,15,.82);backdrop-filter:blur(24px);position:sticky;top:0;z-index:10;flex-shrink:0}
+.ht{font-family:'Cinzel',serif;font-size:15px;font-weight:600;flex:1;letter-spacing:.4px}
+.hs{font-size:11px;color:var(--t2)}
+.ib{width:38px;height:38px;border-radius:10px;background:var(--s);border:1px solid var(--b);color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.ib:hover,.ib:active{background:var(--s2);color:var(--t);border-color:var(--b2)}
+.ib.red{background:var(--rg);color:var(--red);border-color:rgba(225,29,72,.35)}
+.ib.gold{background:var(--gg);color:var(--gold);border-color:rgba(245,158,11,.35)}
+.btn{padding:13px 20px;border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:disabled{opacity:.38;cursor:not-allowed;transform:none!important}
+.bp{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 4px 24px var(--acg)}
+.bp:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
+.bp-red{background:var(--red);color:#fff;box-shadow:0 4px 20px var(--rg)}
+.bp-red:hover:not(:disabled){background:#be123c;transform:translateY(-1px)}
+.bg_{background:var(--gold);color:#07070e;font-weight:600;box-shadow:0 4px 20px var(--gg)}
+.bg_:hover:not(:disabled){background:var(--gold2);transform:translateY(-1px)}
+.bgh{background:var(--s);color:var(--t2);border:1px solid var(--b)}
+.bgh:hover:not(:disabled){background:var(--s2);color:var(--t);border-color:var(--b2)}
+.w100{width:100%}
+.inp{width:100%;padding:13px 15px;background:rgba(255,255,255,.05);border:1px solid var(--b);border-radius:var(--r);color:var(--t);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.inp:focus{border-color:rgba(99,102,241,.6);box-shadow:0 0 0 3px var(--acg)}
+.inp::placeholder{color:var(--t3)}
+.err{color:var(--red);font-size:12px;margin-top:5px;min-height:16px}
+.card{background:var(--s);border:1px solid var(--b);border-radius:var(--r2)}
+.ct{padding:18px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;gap:8px;align-items:center}
+.sl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:8px}
+.av{border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--red));display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;text-transform:uppercase;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;padding:3px 8px;border-radius:18px;font-size:10px;font-weight:700;background:var(--s2);color:var(--t2)}
+.badge.r{background:var(--rg);color:var(--red)}
+.badge.g{background:var(--gg);color:var(--gold)}
+.badge.b{background:var(--acg);color:#a5b4fc}
+.badge.gr{background:rgba(16,185,129,.14);color:#10b981}
+.ctr{display:flex;align-items:center;background:var(--s);border:1px solid var(--b);border-radius:10px;overflow:hidden;flex-shrink:0}
+.cb{width:34px;height:34px;background:transparent;border:none;color:var(--t2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.cb:hover{background:var(--s2);color:var(--t)}
+.cv{min-width:30px;text-align:center;font-weight:700;font-size:14px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:28px;background:var(--s);border:1px solid var(--b);font-size:13px;font-weight:500}
+.chipx{width:16px;height:16px;border-radius:50%;background:rgba(255,255,255,.07);border:none;color:var(--t2);cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center}
+.chipx:hover{background:var(--rg);color:var(--red)}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(14px);background:rgba(10,10,20,.97);border:1px solid var(--b2);border-radius:26px;padding:10px 20px;font-size:13px;font-weight:500;color:var(--t);backdrop-filter:blur(24px);opacity:0;transition:all .25s;z-index:9999;white-space:nowrap;pointer-events:none}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ovl{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .22s}
+.ovl.show{opacity:1;pointer-events:all}
+.sheet{background:#0d0d1e;border:1px solid var(--b2);border-radius:24px 24px 0 0;width:100%;max-width:480px;padding:6px 20px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .28s cubic-bezier(.16,1,.3,1);max-height:88vh;overflow-y:auto}
+.ovl.show .sheet{transform:translateY(0)}
+.pill{width:32px;height:4px;background:rgba(255,255,255,.12);border-radius:2px;margin:10px auto 16px}
+.li{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);margin-bottom:7px}
+.rrow{display:flex;align-items:center;padding:10px 13px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);margin-bottom:7px}
+.mcard{position:relative;overflow:hidden;border-radius:var(--r2);cursor:pointer;border:1px solid var(--b);background:var(--s);padding:18px 16px;transition:transform .2s,border-color .2s}
+.mcard:hover{transform:translateY(-2px);border-color:var(--b2)}
+.mcard::before{content:'';position:absolute;inset:0;opacity:.07;transition:opacity .2s}
+.mcard:hover::before{opacity:.15}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:32px;height:32px;border-radius:50%;border:3px solid var(--b2);border-top-color:var(--acc);animation:spin .8s linear infinite}
+.rcard-big{width:190px;height:270px;border-radius:20px;border:2px solid var(--b2);background:linear-gradient(145deg,#0d0d1a,#13132a);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px;position:relative;overflow:hidden}
+.rcard-big::before{content:'';position:absolute;inset:0;opacity:.12;background:radial-gradient(ellipse at top,var(--rc,#fff),transparent 65%)}
+#scan-ovl{position:fixed;inset:0;z-index:200;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+#scan-ovl.show{display:flex}
+#scan-video{width:100%;max-width:340px;border-radius:14px;object-fit:cover}
+.scan-frame{position:absolute;width:220px;height:220px;border:2px solid var(--gold);border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.65)}
+#scan-canvas{display:none}
+
+/* ══ AUTH ══ */
+#screen-auth{align-items:center;justify-content:flex-start;min-height:100vh}
+.auth-wrap{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;padding:0 24px max(40px,env(safe-area-inset-bottom));padding-top:max(48px,env(safe-area-inset-top))}
+.auth-icon{width:78px;height:78px;border-radius:22px;background:linear-gradient(145deg,rgba(99,102,241,.25),rgba(225,29,72,.18));border:1.5px solid rgba(99,102,241,.35);display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:16px;box-shadow:0 8px 32px rgba(99,102,241,.2)}
+.auth-title{font-family:'Cinzel',serif;font-size:26px;font-weight:700;letter-spacing:.5px;margin-bottom:4px;text-align:center}
+.auth-sub{font-size:13px;color:var(--t2);margin-bottom:26px;text-align:center}
+.auth-tabs{display:flex;width:100%;background:rgba(255,255,255,.05);border:1px solid var(--b);border-radius:50px;padding:4px;margin-bottom:22px}
+.auth-tab{flex:1;padding:10px;border-radius:50px;background:transparent;border:none;color:var(--t2);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s}
+.auth-tab.active{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;box-shadow:0 2px 12px var(--acg)}
+.google-btn{width:100%;padding:13px 16px;background:#fff;border:none;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:10px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:#1a1a2e;cursor:pointer;transition:all .15s;box-shadow:0 2px 12px rgba(0,0,0,.2);margin-bottom:8px}
+.google-btn:hover{background:#f3f3f3;transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.25)}
+.divider{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--t3);margin:14px 0;width:100%}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--b)}
+.finp-wrap{width:100%;margin-bottom:12px}
+.finp-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t2);display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.auth-submit{width:100%;padding:15px;border-radius:var(--r);background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 24px var(--acg);margin-top:6px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.auth-submit:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.pw-wrap{position:relative;width:100%}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);padding:4px;display:flex;align-items:center;justify-content:center}
+#uname-step{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.85);backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;padding:24px}
+#uname-step.show{display:flex}
+.uname-box{background:#0d0d1e;border:1px solid var(--b2);border-radius:var(--r2);padding:32px 24px;width:100%;max-width:360px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH ══ -->
+<div id="screen-auth" class="screen active">
+  <div class="auth-wrap">
+    <div class="auth-icon">🎮</div>
+    <div class="auth-title">GameHub Pro</div>
+    <div class="auth-sub">Sosyal Oyun Merkezi</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab" id="tab-l" onclick="swTab('l')">Giriş Yap</button>
+      <button class="auth-tab active" id="tab-r" onclick="swTab('r')">Kayıt Ol</button>
+    </div>
+
+    <button class="google-btn" onclick="doGoogle()">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.7 33.2 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 20-9 20-20 0-1.3-.1-2.7-.4-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34.1 6.5 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 10-1.8 13.7-4.9l-6.3-5.2C29.5 35.6 26.9 36.5 24 36.5c-5.2 0-9.6-3.5-11.2-8.2L6.3 33.5C9.6 39.7 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.5-2.5 4.6-4.7 6l6.3 5.2C40.7 36 44 30.4 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+      Google ile devam et
+    </button>
+
+    <div class="divider">veya</div>
+
+    <!-- Login -->
+    <div id="al" style="width:100%;display:none;flex-direction:column">
+      <div class="finp-wrap">
+        <div class="finp-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> KULLANICI ADI</div>
+        <input class="inp" id="l-u" type="text" placeholder="örn. ahmet42" autocapitalize="none" autocomplete="off">
+      </div>
+      <div class="finp-wrap">
+        <div class="finp-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ŞİFRE</div>
+        <div class="pw-wrap"><input class="inp" id="l-p" type="password" placeholder="Şifren"><button class="pw-eye" onclick="togglePw('l-p',this)" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <div class="err" id="l-err"></div>
+      <button class="auth-submit" onclick="doLogin()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10,17 15,12 10,7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Giriş Yap</button>
+    </div>
+
+    <!-- Register -->
+    <div id="ar" style="width:100%;display:flex;flex-direction:column">
+      <div class="finp-wrap">
+        <div class="finp-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> KULLANICI ADI</div>
+        <input class="inp" id="r-u" type="text" placeholder="örn. ahmet42" autocapitalize="none" autocomplete="off">
+      </div>
+      <div class="finp-wrap">
+        <div class="finp-lbl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> ŞİFRE</div>
+        <div class="pw-wrap"><input class="inp" id="r-p" type="password" placeholder="En az 6 karakter"><button class="pw-eye" onclick="togglePw('r-p',this)" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+      </div>
+      <div class="err" id="r-err"></div>
+      <button class="auth-submit" onclick="doRegister()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Hesap Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<!-- Google username step -->
+<div id="uname-step">
+  <div class="uname-box">
+    <div style="font-size:32px;margin-bottom:12px">👋</div>
+    <div style="font-family:'Cinzel',serif;font-size:17px;font-weight:600;margin-bottom:6px">Kullanıcı Adı Seç</div>
+    <p style="font-size:13px;color:var(--t2);margin-bottom:18px">Arkadaşların seni bu isimle bulacak.</p>
+    <input class="inp" id="goog-uname" placeholder="örn. ahmet42" autocapitalize="none" autocomplete="off" style="margin-bottom:10px">
+    <div class="err" id="goog-err" style="margin-bottom:10px"></div>
+    <button class="btn bp w100" onclick="saveGoogleUsername()">Devam Et</button>
+  </div>
+</div>
+
+<!-- ══ HUB ══ -->
+<div id="screen-hub" class="screen">
+  <div style="padding:16px 18px;padding-top:max(16px,env(safe-area-inset-top));display:flex;align-items:center;gap:10px">
+    <div style="width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,rgba(99,102,241,.25),rgba(225,29,72,.18));border:1px solid rgba(99,102,241,.3);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">🎮</div>
+    <div style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;color:var(--t2);text-transform:uppercase;flex:1"><strong style="color:var(--gold)">GAME</strong>HUB PRO</div>
+    <button class="ib" onclick="go('friends')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></button>
+    <button class="ib" onclick="doLogout()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+  </div>
+  <div style="padding:0 18px 24px">
+    <div style="margin-bottom:22px">
+      <h2 style="font-family:'Cinzel',serif;font-size:20px;font-weight:600">Merhaba, <span id="hub-name" style="color:var(--gold)"></span> 👋</h2>
+      <p style="color:var(--t2);font-size:13px;margin-top:3px">Hangi oyunu oynamak istiyorsun?</p>
+    </div>
+    <div class="mcard" onclick="go('vk2')" style="margin-bottom:11px">
+      <div style="position:absolute;inset:0;opacity:.1;background:radial-gradient(ellipse at top right,#e11d48,transparent 60%)"></div>
+      <div style="display:flex;align-items:center;gap:14px;position:relative">
+        <div style="font-size:34px">🧛</div>
+        <div><div style="font-family:'Cinzel',serif;font-size:15px;font-weight:700">Vampir Köylü Online</div><div style="font-size:12px;color:var(--t2);margin-top:3px">Herkes kendi telefonunda rolünü görür</div><div style="display:flex;gap:5px;margin-top:8px;flex-wrap:wrap"><span class="badge r">13 Rol</span><span class="badge b">Firebase</span></div></div>
+        <div style="margin-left:auto;width:24px;height:24px;border-radius:8px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:11px">
+      <div class="mcard" onclick="go('wheel')" style="min-height:120px;display:flex;flex-direction:column;justify-content:flex-end"><div style="position:absolute;inset:0;opacity:.09;background:radial-gradient(ellipse at top right,#f59e0b,transparent 60%)"></div><div style="font-size:28px;margin-bottom:7px">🎡</div><div style="font-family:'Cinzel',serif;font-size:13px;font-weight:600">Şans Çarkı</div><div style="font-size:11px;color:var(--t2);margin-top:2px">Offline</div></div>
+      <div class="mcard" onclick="go('vk1')" style="min-height:120px;display:flex;flex-direction:column;justify-content:flex-end"><div style="position:absolute;inset:0;opacity:.09;background:radial-gradient(ellipse at top right,#8b5cf6,transparent 60%)"></div><div style="font-size:28px;margin-bottom:7px">🃏</div><div style="font-family:'Cinzel',serif;font-size:13px;font-weight:600">VK Offline</div><div style="font-size:11px;color:var(--t2);margin-top:2px">Telefon geçir</div></div>
+    </div>
+    <div style="padding:13px 14px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s" onclick="go('friends')" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='var(--s)'">
+      <div id="hub-avs" style="display:flex"></div>
+      <div style="flex:1;margin-left:4px"><div style="font-size:13px;font-weight:500" id="hub-fl">Arkadaşlar</div><div style="font-size:11px;color:var(--t2)" id="hub-fs">Yönet</div></div>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9,18 15,12 9,6"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FRIENDS ══ -->
+<div id="screen-friends" class="screen">
+  <div class="hdr">
+    <button class="ib" onclick="go('hub')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button>
+    <div><div class="ht">Arkadaşlar</div><div class="hs" id="f-sub">—</div></div>
+  </div>
+  <div class="ct">
+    <div class="card" style="padding:17px;display:flex;gap:13px;align-items:flex-start">
+      <div id="my-qr" style="width:90px;height:90px;border-radius:12px;overflow:hidden;background:#090912;border:1px solid var(--b);flex-shrink:0;display:flex;align-items:center;justify-content:center"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Cinzel',serif;font-size:15px;font-weight:600;margin-bottom:6px" id="f-uname"></div>
+        <div style="display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.03);border:1px solid var(--b);border-radius:8px;padding:7px 10px;margin-bottom:8px">
+          <span style="font-size:13px;color:var(--gold);font-weight:600;letter-spacing:1px;flex:1" id="f-code"></span>
+          <button class="ib" style="width:27px;height:27px" onclick="copyCode()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+        </div>
+        <p style="font-size:11px;color:var(--t2);line-height:1.5">Kodu paylaş veya QR tarat</p>
+      </div>
+    </div>
+    <div>
+      <div class="sl">Arkadaş Ekle</div>
+      <div class="row">
+        <input class="inp" id="add-code" placeholder="GH-XXXXXX" autocapitalize="characters" autocomplete="off" style="flex:1" onkeydown="if(event.key==='Enter')doAddFriend()">
+        <button class="ib gold" onclick="openScan()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M17 14h.01M14 17h.01M17 17h.01M20 14v3h-3"/></svg></button>
+        <button class="btn bg_" onclick="doAddFriend()">Ekle</button>
+      </div>
+      <div class="err" id="add-err" style="margin-top:5px"></div>
+    </div>
+    <div>
+      <div class="sl">Arkadaşlar (<span id="f-count">0</span>)</div>
+      <div id="f-list"></div>
+      <div id="f-empty" style="display:none;text-align:center;padding:18px;color:var(--t2);font-size:13px">Henüz arkadaşın yok.</div>
+    </div>
+  </div>
+</div>
+
+<div id="scan-ovl">
+  <div style="position:relative;display:flex;align-items:center;justify-content:center"><video id="scan-video" autoplay playsinline muted></video><div class="scan-frame"></div></div>
+  <canvas id="scan-canvas"></canvas>
+  <button class="btn bgh" onclick="closeScan()">İptal</button>
+  <p style="font-size:12px;color:rgba(255,255,255,.4)">QR kodu kameraya göster</p>
+</div>
+
+<!-- ══ WHEEL ══ -->
+<div id="screen-wheel" class="screen">
+  <div class="hdr"><button class="ib" onclick="go('hub')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button><div><div class="ht">Şans Çarkı</div><div class="hs" id="w-sub"></div></div></div>
+  <div class="ct">
+    <div style="display:flex;flex-direction:column;align-items:center;position:relative;padding:24px 0 4px">
+      <svg style="position:absolute;top:8px;z-index:2" width="24" height="20" viewBox="0 0 24 20"><polygon points="1,1 23,1 12,19" fill="#f59e0b" stroke="#07070e" stroke-width="1.5"/></svg>
+      <canvas id="wcanvas" width="280" height="280" style="width:100%;max-width:280px;height:auto;aspect-ratio:1"></canvas>
+      <button class="btn bg_" id="spin-btn" style="margin-top:12px;border-radius:20px;padding:10px 24px" onclick="spinWheel()">🔄 Döndür</button>
+    </div>
+    <div><div class="sl">Katılımcılar</div><div class="row"><input class="inp" id="w-inp" placeholder="İsim ekle..." style="flex:1" onkeydown="if(event.key==='Enter')addWN()"><button class="btn bgh" onclick="addWN()">+ Ekle</button></div></div>
+    <div id="w-names" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+    <div id="w-empty" style="display:none;text-align:center;padding:14px;color:var(--t2);font-size:13px">En az 2 isim ekle.</div>
+  </div>
+</div>
+
+<!-- ══ VK1 ══ -->
+<div id="screen-vk1" class="screen">
+  <div class="hdr"><button class="ib" onclick="vk1Back()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button><div><div class="ht">VK Offline</div><div class="hs" id="vk1-phase">Kurulum</div></div><div style="flex:1"></div><button class="ib" id="vk1-mod-btn" onclick="vk1ToggleMod()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button></div>
+  <div id="vk1-ct" class="ct"></div>
+</div>
+
+<!-- ══ VK2 ══ -->
+<div id="screen-vk2" class="screen">
+  <div class="hdr"><button class="ib" onclick="vk2Back()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg></button><div><div class="ht">VK Online</div><div class="hs" id="vk2-sub">Lobi</div></div></div>
+  <div id="vk2-ct" class="ct"></div>
+</div>
+
+<div class="ovl" id="win-ovl" onclick="id('win-ovl').classList.remove('show')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="pill"></div>
+    <div style="text-align:center;padding:10px 0 18px">
+      <div style="font-size:54px;margin-bottom:9px">🏆</div>
+      <div style="font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:5px">Kazanan</div>
+      <div style="font-family:'Cinzel',serif;font-size:24px;font-weight:700" id="win-name"></div>
+      <button class="btn bg_ w100" style="margin-top:20px" onclick="id('win-ovl').classList.remove('show')">Tamam</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+const LS_KEY='ghp2_local';
+const id=s=>document.getElementById(s);
+let toastTm;
+function toast(msg){const el=id('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTm);toastTm=setTimeout(()=>el.classList.remove('show'),2800);}
+
+let auth,db;
+(function boot(){
+  try{firebase.initializeApp(FIREBASE_CONFIG);}
+  catch(e){if(e.code!=='app/duplicate-app'){toast('Firebase config hatası! FIREBASE_CONFIG değerlerini kontrol et.');return;}}
+  auth=firebase.auth(); db=firebase.firestore();
+  auth.onAuthStateChanged(async user=>{
+    if(user){await loadMe(user.uid); if(ME) go('hub');}
+    else go('auth');
+  });
+})();
+
+let LS={};
+function loadLS(){try{LS=JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch(e){LS={};}if(!LS.wheel)LS.wheel={names:[],rotation:0};if(!LS.vk1)LS.vk1={players:[],settings:{Vampir:1,Doktor:0,Gözcü:0},roles:[],phase:'setup',dealIdx:0,mod:false};}
+function saveLS(){localStorage.setItem(LS_KEY,JSON.stringify(LS));}
+loadLS();
+
+function go(name){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));id('screen-'+name).classList.add('active');if(name==='hub')renderHub();else if(name==='friends')renderFriends();else if(name==='wheel')renderWheel();else if(name==='vk1')renderVK1();else if(name==='vk2')renderVK2('menu');}
+
+// ── AUTH ──
+let ME=null, pendingGoogleUid=null;
+function swTab(t){['l','r'].forEach(x=>{id('tab-'+x).classList.toggle('active',x===t);id('a'+x).style.display=x===t?'flex':'none';});}
+swTab('r');
+function togglePw(inp,btn){const el=id(inp);if(el.type==='password'){el.type='text';btn.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;}else{el.type='password';btn.innerHTML=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>`;}}
+function genCode(){return 'GH-'+Array.from({length:6},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*32)]).join('');}
+
+async function doRegister(){
+  const u=id('r-u').value.trim().toLowerCase(),p=id('r-p').value,err=id('r-err');
+  err.textContent='';
+  if(!u||u.length<3){err.textContent='Kullanıcı adı en az 3 karakter';return;}
+  if(!/^[a-z0-9_]+$/.test(u)){err.textContent='Sadece harf, rakam, alt çizgi';return;}
+  if(!p||p.length<6){err.textContent='Şifre en az 6 karakter';return;}
+  const fakeEmail=u+'@gamehub.app';
+  try{
+    const cr=await auth.createUserWithEmailAndPassword(fakeEmail,p);
+    const fc=genCode();
+    await db.collection('users').doc(cr.user.uid).set({username:u,friendCode:fc,friends:[],createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    toast('Hesap oluşturuldu!');
+  }catch(ex){err.textContent=ex.code==='auth/email-already-in-use'?'Bu kullanıcı adı alınmış':ex.message;}
+}
+
+async function doLogin(){
+  const u=id('l-u').value.trim().toLowerCase(),p=id('l-p').value,err=id('l-err');
+  err.textContent='';
+  if(!u||!p){err.textContent='Tüm alanları doldur';return;}
+  try{
+    await auth.signInWithEmailAndPassword(u+'@gamehub.app',p);
+  }catch(ex){err.textContent='Kullanıcı adı veya şifre hatalı';}
+}
+
+async function doGoogle(){
+  if(!['https:','http:'].includes(location.protocol)){toast('Google girişi için uygulama bir sunucuda çalışmalı (https). Şimdilik kullanıcı adı ile giriş yap.');return;}
+  try{
+    const provider=new firebase.auth.GoogleAuthProvider();
+    const result=await auth.signInWithPopup(provider);
+    const user=result.user;
+    const doc=await db.collection('users').doc(user.uid).get();
+    if(doc.exists)return; // onAuthStateChanged handles
+    pendingGoogleUid=user.uid;
+    const slug=(user.displayName||'').toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,12);
+    if(slug)id('goog-uname').value=slug;
+    id('uname-step').classList.add('show');
+  }catch(ex){if(ex.code!=='auth/popup-closed-by-user')toast('Google hata: '+ex.message);}
+}
+
+async function saveGoogleUsername(){
+  const u=id('goog-uname').value.trim().toLowerCase(),err=id('goog-err');
+  err.textContent='';
+  if(!u||u.length<3){err.textContent='En az 3 karakter';return;}
+  if(!/^[a-z0-9_]+$/.test(u)){err.textContent='Sadece harf, rakam, alt çizgi';return;}
+  try{
+    const snap=await db.collection('users').where('username','==',u).limit(1).get();
+    if(!snap.empty){err.textContent='Bu kullanıcı adı alınmış';return;}
+    const fc=genCode();
+    await db.collection('users').doc(pendingGoogleUid).set({username:u,friendCode:fc,friends:[],createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    id('uname-step').classList.remove('show'); pendingGoogleUid=null;
+    await loadMe(auth.currentUser.uid); go('hub');
+  }catch(ex){err.textContent=ex.message;}
+}
+
+async function doLogout(){if(v2unsub){v2unsub();v2unsub=null;}ME=null;await auth.signOut();}
+async function loadMe(uid){try{const doc=await db.collection('users').doc(uid).get();if(!doc.exists){ME=null;return;}const d=doc.data();ME={uid,username:d.username,friendCode:d.friendCode,friends:d.friends||[]};}catch(e){ME=null;}}
+
+// ── HUB ──
+async function renderHub(){if(!ME)return;id('hub-name').textContent=ME.username;const avEl=id('hub-avs');if(ME.friends.length){const names=await Promise.all(ME.friends.slice(0,4).map(async uid=>{try{const d=await db.collection('users').doc(uid).get();return d.exists?d.data().username:'?';}catch(e){return '?';}}));avEl.innerHTML=names.map(n=>`<div class="av" style="width:24px;height:24px;font-size:9px;margin-right:-6px;border:2px solid var(--bg)">${n[0].toUpperCase()}</div>`).join('');id('hub-fl').textContent=`${ME.friends.length} arkadaş`;id('hub-fs').textContent='Hepsini gör';}else{avEl.innerHTML='';id('hub-fl').textContent='Arkadaşlar';id('hub-fs').textContent='Yönet';}}
+
+// ── FRIENDS ──
+async function renderFriends(){if(!ME)return;id('f-uname').textContent=ME.username;id('f-code').textContent=ME.friendCode;id('f-sub').textContent=ME.friendCode;const qEl=id('my-qr');qEl.innerHTML='';try{new QRCode(qEl,{text:ME.friendCode,width:86,height:86,colorDark:'#f59e0b',colorLight:'#090912',correctLevel:QRCode.CorrectLevel.M});}catch(e){}id('f-count').textContent=ME.friends.length;if(!ME.friends.length){id('f-list').innerHTML='';id('f-empty').style.display='block';return;}id('f-empty').style.display='none';const docs=await Promise.all(ME.friends.map(uid=>db.collection('users').doc(uid).get().catch(()=>null)));id('f-list').innerHTML=docs.map(d=>{if(!d||!d.exists)return'';const fd=d.data();return`<div class="li"><div class="av" style="width:32px;height:32px;font-size:12px">${fd.username[0].toUpperCase()}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${fd.username}</div><div style="font-size:11px;color:var(--t2)">${fd.friendCode}</div></div><button class="ib red" style="width:30px;height:30px" onclick="removeFriend('${d.id}')">×</button></div>`;}).join('');}
+function copyCode(){navigator.clipboard.writeText(ME.friendCode).then(()=>toast('Kod kopyalandı!')).catch(()=>toast(ME.friendCode));}
+async function doAddFriend(){const code=id('add-code').value.trim().toUpperCase(),err=id('add-err');err.textContent='';if(!code)return;if(code===ME.friendCode){err.textContent='Kendinizi ekleyemezsiniz.';return;}try{const snap=await db.collection('users').where('friendCode','==',code).limit(1).get();if(snap.empty){err.textContent='Bu kodla kullanıcı bulunamadı.';return;}const fDoc=snap.docs[0];if(ME.friends.includes(fDoc.id)){err.textContent='Zaten arkadaşsınız.';return;}await db.collection('users').doc(ME.uid).update({friends:firebase.firestore.FieldValue.arrayUnion(fDoc.id)});ME.friends.push(fDoc.id);id('add-code').value='';toast(`${fDoc.data().username} eklendi!`);renderFriends();}catch(e){err.textContent=e.message;}}
+async function removeFriend(uid){await db.collection('users').doc(ME.uid).update({friends:firebase.firestore.FieldValue.arrayRemove(uid)});ME.friends=ME.friends.filter(f=>f!==uid);renderFriends();toast('Arkadaş çıkarıldı.');}
+
+let scanStream=null,scanAnimId=null;
+async function openScan(){id('scan-ovl').classList.add('show');try{scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});const v=id('scan-video');v.srcObject=scanStream;v.play();v.onloadedmetadata=()=>{const cv=id('scan-canvas'),ctx=cv.getContext('2d');function tick(){if(!scanStream)return;cv.width=v.videoWidth;cv.height=v.videoHeight;ctx.drawImage(v,0,0);try{const img=ctx.getImageData(0,0,cv.width,cv.height),r=jsQR(img.data,img.width,img.height);if(r&&r.data.startsWith('GH-')){closeScan();id('add-code').value=r.data.toUpperCase();toast('QR okundu!');return;}}catch(e){}scanAnimId=requestAnimationFrame(tick);}scanAnimId=requestAnimationFrame(tick);};}catch(e){toast('Kamera açılamadı.');closeScan();}}
+function closeScan(){id('scan-ovl').classList.remove('show');if(scanAnimId){cancelAnimationFrame(scanAnimId);scanAnimId=null;}if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}}
+
+// ── WHEEL ──
+const WC=['#dc2626','#d97706','#16a34a','#2563eb','#7c3aed','#db2777','#0891b2','#ca8a04'];
+let wCvs,wCtx,wSpin=false;
+function renderWheel(){wCvs=id('wcanvas');wCtx=wCvs.getContext('2d');renderWNames();drawWheel();}
+function renderWNames(){const n=LS.wheel.names;id('w-sub').textContent=n.length?`${n.length} kişi`:'';id('w-names').innerHTML=n.map((nm,i)=>`<div class="chip"><span style="color:${WC[i%WC.length]}">●</span>${nm}<button class="chipx" onclick="removeWN(${i})">×</button></div>`).join('');id('w-empty').style.display=n.length<2?'block':'none';if(wCvs)drawWheel();}
+function addWN(){const i=id('w-inp');const n=i.value.trim();if(!n)return;LS.wheel.names.push(n);i.value='';saveLS();renderWNames();}
+function removeWN(i){LS.wheel.names.splice(i,1);saveLS();renderWNames();}
+function drawWheel(){if(!wCvs||!wCtx)return;const c=wCtx,sz=wCvs.width,cx=sz/2,cy=sz/2,r=cx-12;c.clearRect(0,0,sz,sz);const names=LS.wheel.names;if(!names.length){c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fillStyle='rgba(255,255,255,.04)';c.fill();c.strokeStyle='rgba(255,255,255,.06)';c.lineWidth=2;c.stroke();c.fillStyle='#475569';c.font='13px DM Sans';c.textAlign='center';c.fillText('İsim ekleyin',cx,cy+5);return;}const arc=(Math.PI*2)/names.length,rot=LS.wheel.rotation||0;names.forEach((nm,i)=>{const s=rot+i*arc,e=s+arc;c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,r,s,e);c.closePath();c.fillStyle=WC[i%WC.length];c.fill();c.strokeStyle='rgba(0,0,0,.3)';c.lineWidth=1.5;c.stroke();c.save();c.translate(cx,cy);c.rotate(s+arc/2);c.textAlign='right';c.fillStyle='rgba(255,255,255,.9)';c.font=`600 ${Math.max(9,Math.min(13,100/names.length+4))}px DM Sans`;c.fillText(nm.length>10?nm.substring(0,9)+'…':nm,r-10,5);c.restore();});c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.strokeStyle='rgba(245,158,11,.35)';c.lineWidth=3;c.stroke();c.beginPath();c.arc(cx,cy,18,0,Math.PI*2);c.fillStyle='#07070e';c.fill();c.beginPath();c.arc(cx,cy,12,0,Math.PI*2);const g=c.createRadialGradient(cx,cy,2,cx,cy,12);g.addColorStop(0,'#fde68a');g.addColorStop(1,'#f59e0b');c.fillStyle=g;c.fill();c.beginPath();c.arc(cx,cy,6,0,Math.PI*2);c.fillStyle='#07070e';c.fill();}
+function spinWheel(){if(wSpin||LS.wheel.names.length<2){toast('En az 2 isim gerekli!');return;}wSpin=true;id('spin-btn').disabled=true;const dur=4500+Math.random()*2000,extra=(10+Math.random()*6)*Math.PI*2,startR=LS.wheel.rotation||0,t0=performance.now();const ease=t=>1-Math.pow(1-t,5);function frame(now){const t=Math.min((now-t0)/dur,1);LS.wheel.rotation=startR+extra*ease(t);drawWheel();if(t<1)requestAnimationFrame(frame);else{wSpin=false;id('spin-btn').disabled=false;saveLS();const names=LS.wheel.names,n=names.length,arcS=(Math.PI*2)/n;const nr=((LS.wheel.rotation%(Math.PI*2))+Math.PI*2)%(Math.PI*2),diff=((Math.PI*3/2-nr)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);const wi=Math.floor(diff/arcS)%n;id('win-name').innerHTML=`<span style="color:var(--gold)">${names[wi]}</span>`;id('win-ovl').classList.add('show');}}requestAnimationFrame(frame);}
+
+// ── VK1 ──
+const VK1R={'Vampir':{i:'🧛',c:'#e11d48',d:'Gece bir köylüyü öldür.'},'Doktor':{i:'💉',c:'#06b6d4',d:'Her gece birini iyileştir.'},'Gözcü':{i:'👁️',c:'#8b5cf6',d:'Birinin kimliğini öğren.'},'Köylü':{i:'🌾',c:'#10b981',d:'Tartışarak vampiri bul!'}};
+function vk1Back(){if(LS.vk1.phase!=='setup'){if(!confirm('Kuruluma dön?'))return;LS.vk1.phase='setup';LS.vk1.roles=[];LS.vk1.dealIdx=0;saveLS();}go('hub');}
+function vk1ToggleMod(){LS.vk1.mod=!LS.vk1.mod;saveLS();id('vk1-mod-btn').classList.toggle('red',LS.vk1.mod);toast(LS.vk1.mod?'Moderatör Açık':'Moderatör Kapalı');if(LS.vk1.phase==='game')renderVK1();}
+function renderVK1(){id('vk1-mod-btn').classList.toggle('red',LS.vk1.mod);id('vk1-phase').textContent={setup:'Kurulum',deal:'Dağıtım',game:'Oyun'}[LS.vk1.phase]||'';const ct=id('vk1-ct');if(LS.vk1.phase==='setup')ct.innerHTML=vk1SetupHTML();else if(LS.vk1.phase==='deal')vk1DealHTML(ct);else ct.innerHTML=vk1GameHTML();}
+function vk1SetupHTML(){const s=LS.vk1,n=s.players.length,v=Math.max(0,n-s.settings.Vampir-s.settings.Doktor-s.settings.Gözcü),ok=n>=3&&s.settings.Vampir>=1;return`<div><div class="sl">Oyuncular (${n})</div>${s.players.map((p,i)=>`<div class="li"><div class="av" style="width:30px;height:30px;font-size:11px">${p.name[0].toUpperCase()}</div><div style="flex:1">${p.name}</div><button class="ib red" style="width:28px;height:28px" onclick="vk1RemP(${i})">×</button></div>`).join('')}<div class="row" style="margin-top:8px"><input class="inp" id="vk1-pi" placeholder="Oyuncu adı..." style="flex:1" onkeydown="if(event.key==='Enter')vk1AddP()"><button class="btn bgh" onclick="vk1AddP()">Ekle</button></div></div><div><div class="sl">Roller</div>${[['Vampir','🧛'],['Doktor','💉'],['Gözcü','👁️']].map(([k,ic])=>`<div class="rrow"><div style="flex:1;font-size:13px">${ic} ${k}</div><div class="ctr"><button class="cb" onclick="vk1ChR('${k}',-1)">−</button><span class="cv" id="vk1-${k}">${s.settings[k]}</span><button class="cb" onclick="vk1ChR('${k}',1)">+</button></div></div>`).join('')}<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:var(--r)"><span style="font-size:13px;color:var(--t2)">🌾 Köylü (Oto)</span><span style="font-size:18px;font-weight:700;color:#10b981" id="vk1-vl">${v}</span></div></div><button class="btn bp w100" onclick="vk1Deal()" ${ok?'':'disabled'}>${ok?'🃏 Rolleri Dağıt':'Min. 3 oyuncu, 1 vampir'}</button>`;}
+function vk1AddP(){const i=id('vk1-pi');const n=i.value.trim();if(!n)return;if(LS.vk1.players.find(p=>p.name===n)){toast('Bu isim var.');return;}LS.vk1.players.push({name:n});i.value='';saveLS();renderVK1();}
+function vk1RemP(i){LS.vk1.players.splice(i,1);saveLS();renderVK1();}
+function vk1ChR(k,d){const s=LS.vk1.settings,n=LS.vk1.players.length;if(k==='Vampir')s.Vampir=Math.max(1,Math.min(s.Vampir+d,n-1));else if(k==='Doktor')s.Doktor=Math.max(0,Math.min(s.Doktor+d,n-s.Vampir-s.Gözcü));else s.Gözcü=Math.max(0,Math.min(s.Gözcü+d,1,n-s.Vampir-s.Doktor));saveLS();id('vk1-Vampir').textContent=s.Vampir;id('vk1-Doktor').textContent=s.Doktor;id('vk1-Gözcü').textContent=s.Gözcü;id('vk1-vl').textContent=Math.max(0,LS.vk1.players.length-s.Vampir-s.Doktor-s.Gözcü);}
+function vk1Deal(){const s=LS.vk1,n=s.players.length,v=Math.max(0,n-s.settings.Vampir-s.settings.Doktor-s.settings.Gözcü);let pool=[...Array(s.settings.Vampir).fill('Vampir'),...Array(s.settings.Doktor).fill('Doktor'),...Array(s.settings.Gözcü).fill('Gözcü'),...Array(v).fill('Köylü')];for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}s.roles=s.players.map((p,i)=>({name:p.name,role:pool[i]}));s.phase='deal';s.dealIdx=0;saveLS();renderVK1();}
+let vk1Hold=false;
+function vk1DealHTML(ct){const{roles,dealIdx}=LS.vk1;if(dealIdx>=roles.length){LS.vk1.phase='game';saveLS();renderVK1();return;}const e=roles[dealIdx],rd=VK1R[e.role]||VK1R['Köylü'];ct.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:13px;padding:8px 0"><div style="text-align:center;background:var(--s);border:1px solid var(--b);border-radius:var(--r);padding:12px 18px;width:100%"><div style="font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.7px">Sıradaki</div><div style="font-family:'Cinzel',serif;font-size:18px;font-weight:600;margin-top:3px">${e.name}</div></div><p style="font-size:12px;color:var(--t2);text-align:center">Telefonu <strong>${e.name}</strong>'e ver.<br>Basılı tutunca rol görünür.</p><div style="width:160px;height:240px;border-radius:18px;border:2px solid rgba(255,255,255,.1);background:linear-gradient(145deg,#0e0e1c,#14142a);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;touch-action:none" onmousedown="vk1H(true)" ontouchstart="vk1H(true)" onmouseup="vk1H(false)" ontouchend="vk1H(false)" onmouseleave="vk1H(false)"><div id="vk1-front" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity .15s;padding:16px"><div style="font-size:42px">${rd.i}</div><div style="font-family:'Cinzel',serif;font-size:14px;font-weight:700;color:${rd.c}">${e.role}</div><div style="font-size:10px;color:var(--t2);text-align:center;line-height:1.5">${rd.d}</div></div><div id="vk1-back" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;transition:opacity .15s"><div style="font-size:30px;opacity:.3">🎴</div><div style="font-size:11px;color:var(--t2)">Basılı tut</div></div></div><div style="font-size:12px;color:var(--t2)">${dealIdx+1} / ${roles.length}</div><button class="btn bg_ w100" id="vk1-cont" style="display:none" onclick="vk1Next()">Gördüm, Devam →</button></div>`;vk1Hold=false;}
+function vk1H(on){vk1Hold=on;const f=id('vk1-front'),b=id('vk1-back');if(f){f.style.opacity=on?'1':'0';}if(b){b.style.opacity=on?'0':'1';}if(!on){const c=id('vk1-cont');if(c)c.style.display='inline-flex';}}
+function vk1Next(){LS.vk1.dealIdx++;saveLS();if(LS.vk1.dealIdx>=LS.vk1.roles.length){LS.vk1.phase='game';saveLS();renderVK1();}else vk1DealHTML(id('vk1-ct'));}
+function vk1GameHTML(){const{roles,mod}=LS.vk1;if(mod)return`<div><div class="sl">Moderatör Listesi</div><div>${roles.map(r=>{const rd=VK1R[r.role]||VK1R['Köylü'];return`<div class="li"><span style="font-size:18px">${rd.i}</span><div style="flex:1;font-size:13px">${r.name}</div><span style="font-size:12px;font-weight:600;color:${rd.c}">${r.role}</span></div>`;}).join('')}</div><button class="btn bp-red w100" style="margin-top:12px" onclick="vk1Reset()">Yeni Oyun</button></div>`;return`<div style="text-align:center;padding:32px 20px"><div style="font-size:42px;margin-bottom:12px">🎮</div><div style="font-family:'Cinzel',serif;font-size:18px;margin-bottom:8px">Oyun Başladı!</div><p style="color:var(--t2);font-size:13px;margin-bottom:20px">Tüm kartlar dağıtıldı.</p><button class="btn bgh w100" onclick="vk1Reset()">Yeni Oyun</button></div>`;}
+function vk1Reset(){LS.vk1.phase='setup';LS.vk1.roles=[];LS.vk1.dealIdx=0;saveLS();renderVK1();}
+
+// ── VK2 ROLES ──
+const ROLES={'Vampir':{g:'kötü',i:'🧛',c:'#e11d48',d:'Gece oylamayla köylü öldür. Gündüz kimliğini gizle.'},'Safkan Vampir':{g:'kötü',i:'🦇',c:'#be123c',d:'Vampirsin ama Gözcü seni Köylü görür.'},'Hain':{g:'kötü',i:'🗡️',c:'#9f1239',d:'Köylü görünürsün ama vampirlerin kazanmasını istersin.'},'Köylü':{g:'iyi',i:'🌾',c:'#10b981',d:'Tartışarak vampiri bul ve oyla!',auto:true},'Doktor':{g:'iyi',i:'💉',c:'#06b6d4',d:'Her gece birini koru. Vampirler o kişiyi öldüremez.'},'Gözcü':{g:'iyi',i:'👁️',c:'#8b5cf6',d:'Her gece bir kişinin vampir mi köylü mü olduğunu öğren.'},'Avcı':{g:'iyi',i:'🏹',c:'#f59e0b',d:'Elenirsem yanımda bir kişiyi götürürüm!'},'Muhtar':{g:'iyi',i:'⭐',c:'#eab308',d:'Oylama günlerinde 2 oy hakkın var.'},'Büyücü':{g:'iyi',i:'🧙',c:'#7c3aed',d:'Bir geceliğine birinin özel gücünü engelle.'},'Ziyaretçi':{g:'iyi',i:'💋',c:'#f43f5e',d:'Geceleri birini ziyaret et. Vampir ziyarette değilsen sağ çık.'},'Aşıklar':{g:'tarafsız',i:'💘',c:'#ec4899',d:'Aşığın ölürse sen de ölürsün. Birlikte hayatta kalın!',paired:true},'Aptal':{g:'tarafsız',i:'🤡',c:'#a855f7',d:'Amacın oylama ile asılmak! Asılırsan tek başına kazanırsın.'},'Seri Katil':{g:'tarafsız',i:'🔪',c:'#64748b',d:'Tek başınasın. Son kişi olursan kazanırsın.'}};
+const ROLE_CATS=[{label:'🩸 Kötüler',roles:['Vampir','Safkan Vampir','Hain']},{label:'☀️ İyiler',roles:['Doktor','Gözcü','Avcı','Muhtar','Büyücü','Ziyaretçi']},{label:'🃏 Tarafsızlar',roles:['Aşıklar','Aptal','Seri Katil']}];
+
+// ── VK2 STATE ──
+let v2State='menu',v2Code=null,v2IsHost=false,v2Lobby=null,v2unsub=null,v2HS={roleCounts:{Vampir:1}},v2MyAssignment=null;
+function vk2Back(){if(v2State==='menu'){go('hub');return;}if(v2unsub){v2unsub();v2unsub=null;}v2State='menu';v2Code=null;v2IsHost=false;v2Lobby=null;v2MyAssignment=null;renderVK2('menu');}
+function renderVK2(state){v2State=state;id('vk2-sub').textContent={menu:'Lobi',lobby:'Lobi',role:'Rol',done:'Oyun Başladı!'}[state]||'';const ct=id('vk2-ct');ct.innerHTML='';if(state==='menu')vk2Menu(ct);else if(state==='lobby')vk2LobbyRender(ct);else if(state==='role')vk2RoleRender(ct);else if(state==='done')vk2DoneRender(ct);}
+function vk2Menu(ct){ct.innerHTML=`<div style="text-align:center;padding:20px 0 10px"><div style="font-size:44px;margin-bottom:12px">🧛</div><div style="font-family:'Cinzel',serif;font-size:18px;font-weight:700;margin-bottom:6px">Vampir Köylü</div><p style="font-size:13px;color:var(--t2);line-height:1.6">Her oyuncu kendi telefonunda rolünü görür.</p></div><button class="btn bp w100" style="font-size:15px;padding:15px" onclick="vk2Create()">🏰 Lobi Oluştur</button><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:1px;background:var(--b)"></div><span style="font-size:12px;color:var(--t3)">veya katıl</span><div style="flex:1;height:1px;background:var(--b)"></div></div><div><div class="sl">Lobi Kodu</div><div class="row"><input class="inp" id="v2-jc" placeholder="6 haneli kod" maxlength="6" autocapitalize="characters" autocomplete="off" style="flex:1;font-size:18px;letter-spacing:3px;text-transform:uppercase;text-align:center" onkeydown="if(event.key==='Enter')vk2Join()"><button class="btn bg_" onclick="vk2Join()">Katıl</button></div><div class="err" id="v2-err" style="margin-top:5px"></div></div>`;}
+async function vk2Create(){if(!ME){toast('Giriş yapman gerekiyor.');return;}const code=Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,6);const lobby={code,hostUid:ME.uid,hostUsername:ME.username,players:[{uid:ME.uid,username:ME.username}],moderators:[ME.uid],status:'waiting',assignments:{},createdAt:firebase.firestore.FieldValue.serverTimestamp()};try{await db.collection('lobbies').doc(code).set(lobby);v2Code=code;v2IsHost=true;v2HS={roleCounts:{Vampir:1}};vk2Subscribe();}catch(e){toast('Hata: '+e.message);}}
+async function vk2Join(){const code=(id('v2-jc')?.value||'').trim().toUpperCase(),err=id('v2-err');if(err)err.textContent='';if(!code||code.length<4){if(err)err.textContent='Geçerli bir kod gir.';return;}if(!ME){toast('Giriş yapman gerekiyor.');return;}try{const snap=await db.collection('lobbies').doc(code).get();if(!snap.exists){if(err)err.textContent='Lobi bulunamadı.';return;}const d=snap.data();if(d.status==='started'){if(err)err.textContent='Oyun başlamış.';return;}if(!d.players.find(p=>p.uid===ME.uid))await db.collection('lobbies').doc(code).update({players:firebase.firestore.FieldValue.arrayUnion({uid:ME.uid,username:ME.username})});v2Code=code;v2IsHost=false;vk2Subscribe();}catch(e){if(err)err.textContent='Hata: '+e.message;}}
+function vk2Subscribe(){if(v2unsub){v2unsub();v2unsub=null;}v2unsub=db.collection('lobbies').doc(v2Code).onSnapshot(snap=>{if(!snap.exists)return;v2Lobby=snap.data();if(v2Lobby.status==='started'&&v2State!=='role'&&v2State!=='done'){v2MyAssignment=v2Lobby.assignments[ME.uid]||null;renderVK2('role');}else if(v2State==='lobby'||v2State==='menu')renderVK2('lobby');else if(v2State==='lobby')vk2LobbyRender(id('vk2-ct'));});renderVK2('lobby');}
+
+function vk2LobbyRender(ct){
+  if(!v2Lobby){ct.innerHTML='<div style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></div>';return;}
+  const players=v2Lobby.players||[],mods=v2Lobby.moderators||[],n=players.length,rs=v2HS.roleCounts;
+  const pH=players.map(p=>{const isMod=mods.includes(p.uid),isMe=p.uid===ME.uid;return`<div class="li" style="${isMod?'border-color:rgba(245,158,11,.4);background:rgba(245,158,11,.04)':''}"><div class="av" style="width:32px;height:32px;font-size:12px">${p.username[0].toUpperCase()}</div><div style="flex:1;min-width:0;font-size:13px;font-weight:500">${p.username}${isMe?' (Sen)':''}</div>${isMod?'<span class="badge g">MOD</span>':''}${v2IsHost&&!isMod&&p.uid!==ME.uid?`<button class="ib gold" style="width:28px;height:28px" onclick="vk2ToggleMod('${p.uid}','${p.username}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>`:''}${v2IsHost&&isMod&&p.uid!==ME.uid?`<button class="ib red" style="width:28px;height:28px" onclick="vk2ToggleMod('${p.uid}','${p.username}')">×</button>`:''}</div>`;}).join('');
+  if(v2IsHost){
+    const nonMods=players.filter(p=>!mods.includes(p.uid)),nmc=nonMods.length;
+    let sc=0;Object.entries(rs).forEach(([k,v])=>{if(k==='Aşıklar')sc+=v*2;else sc+=v;});
+    const vill=Math.max(0,nmc-sc),canStart=nmc>=2&&(rs.Vampir||0)>=1&&sc<=nmc;
+    let hint='';if(nmc>=5&&nmc<=6)hint='Öneri: 1 Vampir, 1 Doktor, geri kalan Köylü';else if(nmc>=7&&nmc<=8)hint='Öneri: 1 Vampir, 1 Doktor, 1 Gözcü, geri kalan Köylü';else if(nmc>=9&&nmc<=11)hint='Öneri: 2 Vampir, 1 Doktor, 1 Gözcü, geri kalan Köylü';else if(nmc>=12)hint='Öneri: 3 Vampir, 1 Doktor, 1 Gözcü, 1 Avcı, geri kalan Köylü';
+    const rH=ROLE_CATS.map(cat=>`<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);padding:7px 0 5px;border-bottom:1px solid var(--b);margin-bottom:7px">${cat.label}</div>${cat.roles.map(rn=>{const rd=ROLES[rn];if(!rd)return'';const cnt=rs[rn]||0;return`<div class="rrow" style="border-color:${cnt>0?rd.c+'44':'var(--b)'}"><span style="font-size:17px;margin-right:2px">${rd.i}</span><div style="flex:1;min-width:0;margin:0 6px"><div style="font-size:13px;font-weight:500;color:${cnt>0?rd.c:'var(--t)'}">${rn}${rd.paired?' (çift)':''}</div><div style="font-size:10px;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${rd.d}</div></div><div class="ctr"><button class="cb" onclick="vk2ChRole('${rn}',-1)">−</button><span class="cv" id="vr-${rn.replace(/ /g,'_')}">${cnt}</span><button class="cb" onclick="vk2ChRole('${rn}',1)">+</button></div></div>`;}).join('')}</div>`).join('');
+    ct.innerHTML=`<div class="card" style="padding:18px;text-align:center"><div style="font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Lobi Kodu</div><div style="font-family:'Cinzel',serif;font-size:36px;font-weight:700;color:var(--gold);letter-spacing:6px;margin-bottom:10px">${v2Code}</div><div id="lobby-qr" style="width:100px;height:100px;margin:0 auto 10px;background:#090912;border:1px solid var(--b);border-radius:10px;overflow:hidden;display:flex;align-items:center;justify-content:center"></div><button class="btn bgh" onclick="copyLobbyCode()" style="font-size:12px;padding:8px 14px">📋 Kopyala</button></div>
+    <div><div class="sl">Oyuncular (${n}) <span style="float:right;display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t)">MOD <div class="ctr" style="display:inline-flex"><button class="cb" style="width:26px;height:26px;font-size:12px" onclick="vk2ChMod(-1)">−</button><span class="cv" style="font-size:12px;min-width:22px" id="v2-modc">${mods.length}</span><button class="cb" style="width:26px;height:26px;font-size:12px" onclick="vk2ChMod(1)">+</button></div></span></div>${pH}<p style="font-size:11px;color:var(--t3);line-height:1.5;margin-top:4px">Moderatörler rol almaz, oyunu yönetir.</p></div>
+    <div><div class="sl">Rol Ayarları</div>${rH}<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.18);border-radius:var(--r);margin-top:4px"><span style="font-size:13px;color:var(--t2)">🌾 Köylü (Otomatik)</span><span style="font-size:18px;font-weight:700;color:#10b981" id="v2-vill">${vill}</span></div>${hint?`<p style="font-size:11px;color:var(--gold);background:var(--gg);border-radius:8px;padding:8px 12px;margin-top:8px">💡 ${hint}</p>`:''}</div>
+    <button class="btn bp w100" style="font-size:15px;padding:15px" onclick="vk2StartGame()" ${canStart?'':'disabled'}>${canStart?'🚀 Oyunu Başlat':'Yeterli oyuncu veya vampir yok'}</button>`;
+    setTimeout(()=>{const qEl=id('lobby-qr');if(qEl){qEl.innerHTML='';try{new QRCode(qEl,{text:v2Code,width:96,height:96,colorDark:'#f59e0b',colorLight:'#090912',correctLevel:QRCode.CorrectLevel.M});}catch(e){}}} ,50);
+  }else{ct.innerHTML=`<div class="card" style="padding:18px;text-align:center"><div style="font-size:10px;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px">Lobi Kodu</div><div style="font-family:'Cinzel',serif;font-size:30px;font-weight:700;color:var(--gold);letter-spacing:5px">${v2Code}</div><div style="font-size:12px;color:var(--t2);margin-top:6px">Kurucu: <strong style="color:var(--t)">${v2Lobby.hostUsername}</strong></div></div><div><div class="sl">Oyuncular (${n})</div>${pH}</div><div style="text-align:center;padding:20px 0"><div class="spinner" style="margin:0 auto 12px"></div><p style="font-size:13px;color:var(--t2)">Kurucu oyunu başlatmasını bekle…</p></div>`;}
+}
+
+function copyLobbyCode(){navigator.clipboard.writeText(v2Code).then(()=>toast('Lobi kodu kopyalandı!')).catch(()=>toast(v2Code));}
+async function vk2ToggleMod(uid,username){if(!v2IsHost)return;const mods=[...v2Lobby.moderators||[]];const idx=mods.indexOf(uid);if(idx>-1){if(mods.length<=1){toast('En az 1 moderatör olmalı.');return;}mods.splice(idx,1);}else mods.push(uid);try{await db.collection('lobbies').doc(v2Code).update({moderators:mods});toast(`${username} moderatör ${idx>-1?'çıkarıldı':'yapıldı'}.`);}catch(e){}}
+async function vk2ChMod(d){if(!v2IsHost||!v2Lobby)return;const players=v2Lobby.players||[],mods=[...v2Lobby.moderators||[]];const target=mods.length+d;if(target<1){toast('Min 1 mod.');return;}if(target>players.length-1){toast('Mod sayısı aşamaz.');return;}if(d>0){const nm=players.find(p=>!mods.includes(p.uid)&&p.uid!==ME.uid);if(nm)mods.push(nm.uid);}else{const rem=mods.filter(u=>u!==ME.uid);if(rem.length>0)mods.splice(mods.indexOf(rem[rem.length-1]),1);}try{await db.collection('lobbies').doc(v2Code).update({moderators:mods});}catch(e){}}
+function vk2ChRole(name,d){const rs=v2HS.roleCounts,rd=ROLES[name];if(!rd)return;const cur=rs[name]||0,nv=Math.max(0,cur+d);if(nv===0)delete rs[name];else rs[name]=nv;const cel=id('vr-'+name.replace(/ /g,'_'));if(cel)cel.textContent=nv;const mods=v2Lobby?.moderators||[],nmc=(v2Lobby?.players||[]).filter(p=>!mods.includes(p.uid)).length;let sc=0;Object.entries(rs).forEach(([k,v])=>{if(k==='Aşıklar')sc+=v*2;else sc+=v;});const v=Math.max(0,nmc-sc);const vel=id('v2-vill');if(vel)vel.textContent=v;const sb=id('vk2-ct').querySelector('.btn.bp');if(sb){const ok=nmc>=2&&(rs.Vampir||0)>=1&&sc<=nmc;sb.disabled=!ok;sb.textContent=ok?'🚀 Oyunu Başlat':'Yeterli oyuncu veya vampir yok';}}
+async function vk2StartGame(){if(!v2IsHost||!v2Lobby)return;const players=v2Lobby.players||[],mods=v2Lobby.moderators||[],nonMods=players.filter(p=>!mods.includes(p.uid)),rs=v2HS.roleCounts;let pool=[];Object.entries(rs).forEach(([k,v])=>{if(k==='Aşıklar')pool.push(...Array(v*2).fill('Aşıklar'));else pool.push(...Array(v).fill(k));});const vc=Math.max(0,nonMods.length-pool.length);pool.push(...Array(vc).fill('Köylü'));for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]];}const assignments={};nonMods.forEach((p,i)=>{assignments[p.uid]={role:pool[i]||'Köylü',username:p.username};});const lovers=nonMods.filter(p=>assignments[p.uid]?.role==='Aşıklar');for(let i=0;i<lovers.length;i+=2){if(lovers[i]&&lovers[i+1]){assignments[lovers[i].uid].loverName=lovers[i+1].username;assignments[lovers[i+1].uid].loverName=lovers[i].username;}}mods.forEach(uid=>{const p=players.find(x=>x.uid===uid);if(p)assignments[uid]={role:'Moderatör',username:p.username};});try{await db.collection('lobbies').doc(v2Code).update({status:'started',assignments});}catch(e){toast('Hata: '+e.message);}}
+function vk2RoleRender(ct){if(!v2MyAssignment){ct.innerHTML='<div style="text-align:center;padding:40px;color:var(--t2)">Rol bilgisi bulunamadı.</div>';return;}const{role,loverName}=v2MyAssignment,rd=ROLES[role]||{i:'🌾',c:'#10b981',d:'Oyunu yönet.',g:'iyi'};ct.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 0;text-align:center"><div style="font-family:'Cinzel',serif;font-size:20px;font-weight:700">Rolün Açıklandı!</div><div class="rcard-big" style="--rc:${rd.c};border-color:${rd.c}55"><div style="font-size:50px">${rd.i}</div><div style="font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:${rd.c}">${role}</div><div style="font-size:11px;color:var(--t2);line-height:1.6;text-align:center;max-width:155px">${rd.d}</div></div>${loverName?`<div style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(236,72,153,.14);border:1px solid rgba(236,72,153,.3);border-radius:18px;font-size:12px;color:#ec4899">💘 Aşığın: <strong>${loverName}</strong></div>`:''}${role==='Moderatör'?`<div style="padding:7px 14px;background:rgba(245,158,11,.14);border:1px solid rgba(245,158,11,.3);border-radius:18px;font-size:12px;color:var(--gold)">⭐ Oyunu yönetiyorsun, rol almadın.</div>`:''}<div style="padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid var(--b);border-radius:var(--r);font-size:11px;color:var(--t3);line-height:1.5;text-align:left;width:100%">${rd.g==='kötü'?'🩸 <strong>Kötüler</strong>: Vampirler ekibini bilir. Kimliğini gizle.':rd.g==='iyi'?'☀️ <strong>İyiler</strong>: Vampirleri bulup elimine et.':'🃏 <strong>Tarafsızlar</strong>: Kendi amacını gerçekleştir.'}</div><button class="btn bp w100" style="font-size:15px;padding:14px" onclick="renderVK2('done')">✓ Okudum, Kapat</button></div>`;}
+function vk2DoneRender(ct){ct.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:32px 10px;text-align:center"><div style="font-size:52px">🎮</div><div style="font-family:'Cinzel',serif;font-size:20px;font-weight:700">Oyun Başladı!</div><p style="font-size:13px;color:var(--t2);line-height:1.7;max-width:300px">Herkes rolünü kapattı. İyi oyunlar! 🧛☀️</p><div style="padding:14px 16px;background:var(--s);border:1px solid var(--b);border-radius:var(--r);font-size:12px;color:var(--t2);line-height:1.7;text-align:left;width:100%"><div style="font-weight:600;color:var(--t);margin-bottom:6px">📖 Kurallar Özeti</div>🌙 <strong>Gece</strong>: Vampirler hedef seçer, doktor korur, gözcü sorar.<br>☀️ <strong>Gündüz</strong>: Tartışın, birini eleyin.<br>🏆 Tüm vampirleri bulursanız iyiler kazanır.</div><button class="btn bgh w100" onclick="vk2Back();go('hub')">Ana Menüye Dön</button></div>`;}
+</script>
+</body>
+</html>
