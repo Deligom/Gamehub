@@ -438,6 +438,20 @@ async function openScan(){
           const codes=await detector.detect(v);
           if(codes.length>0){
             const val=codes[0].rawValue.trim().toUpperCase();
+            if(window._lobbyQrMode){
+              window._lobbyQrMode=false;
+              closeScan();
+              const jc=document.getElementById('v2-jc');
+              if(jc){jc.value=val;vk2Join();}
+              return;
+            }
+            if(window._lobbyQrMode){
+              window._lobbyQrMode=false;
+              closeScan();
+              const jc=document.getElementById('v2-jc');
+              if(jc){jc.value=val;vk2Join();}
+              return;
+            }
             if(val.startsWith('GH-')){
               closeScan();
               id('add-code').value=val;
@@ -640,7 +654,13 @@ const ROLE_CATS=[{label:'🩸 Kötüler',roles:['Vampir','Safkan Vampir','Hain']
 let v2State='menu',v2Code=null,v2IsHost=false,v2Lobby=null,v2unsub=null,v2HS={roleCounts:{Vampir:1}},v2MyAssignment=null;
 function vk2Back(){if(v2State==='menu'){go('hub');return;}if(v2unsub){v2unsub();v2unsub=null;}v2State='menu';v2Code=null;v2IsHost=false;v2Lobby=null;v2MyAssignment=null;renderVK2('menu');}
 function renderVK2(state){v2State=state;id('vk2-sub').textContent={menu:'Lobi',lobby:'Lobi',role:'Rol',done:'Oyun Başladı!'}[state]||'';const ct=id('vk2-ct');ct.innerHTML='';if(state==='menu')vk2Menu(ct);else if(state==='lobby')vk2LobbyRender(ct);else if(state==='role')vk2RoleRender(ct);else if(state==='done')vk2DoneRender(ct);}
-function vk2Menu(ct){ct.innerHTML=`<div style="text-align:center;padding:20px 0 10px"><div style="font-size:44px;margin-bottom:12px">🧛</div><div style="font-family:'Cinzel',serif;font-size:18px;font-weight:700;margin-bottom:6px">Vampir Köylü</div><p style="font-size:13px;color:var(--t2);line-height:1.6">Her oyuncu kendi telefonunda rolünü görür.</p></div><button class="btn bp w100" style="font-size:15px;padding:15px" onclick="vk2Create()">🏰 Lobi Oluştur</button><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:1px;background:var(--b)"></div><span style="font-size:12px;color:var(--t3)">veya katıl</span><div style="flex:1;height:1px;background:var(--b)"></div></div><div><div class="sl">Lobi Kodu</div><div class="row"><input class="inp" id="v2-jc" placeholder="6 haneli kod" maxlength="6" autocapitalize="characters" autocomplete="off" style="flex:1;font-size:18px;letter-spacing:3px;text-transform:uppercase;text-align:center" onkeydown="if(event.key==='Enter')vk2Join()"><button class="btn bg_" onclick="vk2Join()">Katıl</button></div><div class="err" id="v2-err" style="margin-top:5px"></div></div>`;}
+function vk2Menu(ct){ct.innerHTML=`<div style="text-align:center;padding:20px 0 10px"><div style="font-size:44px;margin-bottom:12px">🧛</div><div style="font-family:'Cinzel',serif;font-size:18px;font-weight:700;margin-bottom:6px">Vampir Köylü</div><p style="font-size:13px;color:var(--t2);line-height:1.6">Her oyuncu kendi telefonunda rolünü görür.</p></div><button class="btn bp w100" style="font-size:15px;padding:15px" onclick="vk2Create()">🏰 Lobi Oluştur</button><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:1px;background:var(--b)"></div><span style="font-size:12px;color:var(--t3)">veya katıl</span><div style="flex:1;height:1px;background:var(--b)"></div></div><div><div class="sl">Lobi Kodu</div><div class="row"><input class="inp" id="v2-jc" placeholder="6 haneli kod" maxlength="6" autocapitalize="characters" autocomplete="off" style="flex:1;font-size:18px;letter-spacing:3px;text-transform:uppercase;text-align:center" onkeydown="if(event.key==='Enter')vk2Join()"><button class="ib gold" onclick="openLobbyQrScan()" title="QR Tara"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M17 14h.01M14 17h.01M17 17h.01M20 14v3h-3"/></svg></button><button class="btn bg_" onclick="vk2Join()">Katıl</button></div><div class="err" id="v2-err" style="margin-top:5px"></div></div>`;}
+function openLobbyQrScan(){
+  // Reuse the same scan overlay but set lobby mode
+  window._lobbyQrMode=true;
+  openScan();
+}
+
 async function vk2Create(){if(!ME){toast('Giriş yapman gerekiyor.');return;}const code=Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,6);const lobby={code,hostUid:ME.uid,hostUsername:ME.username,players:[{uid:ME.uid,username:ME.username}],moderators:[ME.uid],status:'waiting',assignments:{},createdAt:firebase.firestore.FieldValue.serverTimestamp()};try{await db.collection('lobbies').doc(code).set(lobby);v2Code=code;v2IsHost=true;v2HS={roleCounts:{Vampir:1}};vk2Subscribe();}catch(e){toast('Hata: '+e.message);}}
 async function vk2Join(){const code=(id('v2-jc')?.value||'').trim().toUpperCase(),err=id('v2-err');if(err)err.textContent='';if(!code||code.length<4){if(err)err.textContent='Geçerli bir kod gir.';return;}if(!ME){toast('Giriş yapman gerekiyor.');return;}try{const snap=await db.collection('lobbies').doc(code).get();if(!snap.exists){if(err)err.textContent='Lobi bulunamadı.';return;}const d=snap.data();if(d.status==='started'){if(err)err.textContent='Oyun başlamış.';return;}if(!d.players.find(p=>p.uid===ME.uid))await db.collection('lobbies').doc(code).update({players:firebase.firestore.FieldValue.arrayUnion({uid:ME.uid,username:ME.username})});v2Code=code;v2IsHost=false;vk2Subscribe();}catch(e){if(err)err.textContent='Hata: '+e.message;}}
 function vk2Subscribe(){if(v2unsub){v2unsub();v2unsub=null;}v2unsub=db.collection('lobbies').doc(v2Code).onSnapshot(snap=>{if(!snap.exists)return;v2Lobby=snap.data();if(v2Lobby.status==='started'&&v2State!=='role'&&v2State!=='done'){v2MyAssignment=v2Lobby.assignments[ME.uid]||null;renderVK2('role');}else if(v2State==='lobby'||v2State==='menu')renderVK2('lobby');else if(v2State==='lobby')vk2LobbyRender(id('vk2-ct'));});renderVK2('lobby');}
