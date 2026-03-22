@@ -441,7 +441,7 @@ async function openScan(){
             if(val.startsWith('GH-')){
               closeScan();
               id('add-code').value=val;
-              toast('QR okundu!');
+              doAddFriend();
               return;
             }
           }
@@ -469,7 +469,7 @@ async function openScan(){
             if(val.startsWith('GH-')){
               closeScan();
               id('add-code').value=val;
-              toast('QR okundu!');
+              doAddFriend();
               return;
             }
           }
