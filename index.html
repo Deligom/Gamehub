@@ -408,7 +408,7 @@ function mkRDesc(d){
 function toggleRD(btn){
   const t=btn.previousElementSibling;
   const exp=t.classList.toggle('exp');
-  btn.textContent=exp?' daha az...'>' daha fazla...';
+  btn.textContent=exp?' daha az...':' daha fazla...';
 }
 
 function loadLS(){try{LS=JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch(e){LS={};}if(!LS.wheel)LS.wheel={names:[],rotation:0};if(!LS.vk1)LS.vk1={players:[],settings:{Vampir:1,Doktor:0,'Safkan Vampir':0,Hain:0,Gözcü:0,Avcı:0,Muhtar:0,Büyücü:0,Ziyaretçi:0,Aşıklar:0,Aptal:0,'Seri Katil':0},roles:[],phase:'setup',dealIdx:0,mod:false};}
