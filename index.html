@@ -135,8 +135,8 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 #uname-step.show{display:flex}
 .uname-box{background:#0d0d1e;border:1px solid var(--b2);border-radius:var(--r2);padding:32px 24px;width:100%;max-width:360px;text-align:center}
 
-.rdtxt{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rdtxt.exp{white-space:normal;overflow:visible;text-overflow:unset}
+.rdtxt{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.rdtxt.exp{display:block;overflow:visible;-webkit-line-clamp:unset}
 
 .rdesc-wrap{font-size:10px;color:var(--t3);line-height:1.4}
 .rdmore-btn{color:var(--t3);opacity:.65;cursor:pointer;font-size:9px}
@@ -402,13 +402,20 @@ let auth,db;
 let LS={};
 
 function mkRDesc(d){
-  if(d.length<=52)return '<div class="rdesc-wrap"><span class="rdtxt">'+d+'</span></div>';
-  return '<div class="rdesc-wrap"><span class="rdtxt" id="">'+d+'</span><span class="rdmore-btn" onclick="toggleRD(this)"> daha fazla...</span></div>';
+  if(d.length<=25)return '<div class="rdesc-wrap"><span class="rdtxt exp">'+d+'</span></div>';
+  return '<div class="rdesc-wrap"><span class="rdtxt">'+d+'</span><span class="rdmore-btn" onclick="toggleRD(this)"> daha fazla...</span></div>';
 }
 function toggleRD(btn){
   const t=btn.previousElementSibling;
   const exp=t.classList.toggle('exp');
-  btn.textContent=exp?' daha az...':' daha fazla...';
+  btn.style.display=exp?'none':'inline';
+  if(exp){
+    const less=document.createElement('span');
+    less.className='rdmore-btn';
+    less.textContent=' daha az...';
+    less.onclick=function(){t.classList.remove('exp');this.remove();btn.style.display='inline';};
+    btn.parentNode.insertBefore(less,btn.nextSibling);
+  }
 }
 
 function loadLS(){try{LS=JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch(e){LS={};}if(!LS.wheel)LS.wheel={names:[],rotation:0};if(!LS.vk1)LS.vk1={players:[],settings:{Vampir:1,Doktor:0,'Safkan Vampir':0,Hain:0,Gözcü:0,Avcı:0,Muhtar:0,Büyücü:0,Ziyaretçi:0,Aşıklar:0,Aptal:0,'Seri Katil':0},roles:[],phase:'setup',dealIdx:0,mod:false};}
